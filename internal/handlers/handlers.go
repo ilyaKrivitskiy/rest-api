@@ -8,5 +8,25 @@ func CheckerFunc(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	w.Write([]byte("HomeFunc is working..."))
+	w.Write([]byte("Homepage."))
+}
+
+func CreateBook(w http.ResponseWriter, req *http.Request) {
+
+}
+
+func GetAllBooks(w http.ResponseWriter, req *http.Request) {
+
+}
+
+func GetBook(w http.ResponseWriter, req *http.Request) {
+
+}
+
+func UpdateBook(w http.ResponseWriter, req *http.Request) {
+
+}
+
+func DeleteBook(w http.ResponseWriter, req *http.Request) {
+
 }
