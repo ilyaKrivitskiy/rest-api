@@ -15,21 +15,31 @@ func CheckerFunc(w http.ResponseWriter, req *http.Request) {
 }
 
 func CreateBook(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
+	w.Write([]byte("CreateBook function..."))
 }
 
 func GetAllBooks(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
+	w.Write([]byte("GetAllBooks function..."))
 }
 
 func GetBook(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
+	w.Write([]byte("GetBook function..."))
 }
 
 func UpdateBook(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
+	w.Write([]byte("UpdateBook function..."))
 }
 
 func DeleteBook(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
+	w.Write([]byte("DeleteBook function..."))
 }
