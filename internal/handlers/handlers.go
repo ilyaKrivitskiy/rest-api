@@ -1,6 +1,9 @@
 package handlers
 
-import "net/http"
+import (
+	"net/http"
+	//"github.com/ilyaKrivitskiy/rest-api/pkg"
+)
 
 func CheckerFunc(w http.ResponseWriter, req *http.Request) {
 	if req.URL.Path != "/" {
