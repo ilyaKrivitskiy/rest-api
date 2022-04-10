@@ -145,7 +145,56 @@ func GetBook(w http.ResponseWriter, req *http.Request) {
 func UpdateBook(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	w.Write([]byte("UpdateBook function..."))
+	if req.Method != http.MethodPut {
+		w.Header().Add("Allow", "PUT")
+		http.Error(w, "This method is not allowed!", http.StatusMethodNotAllowed)
+		return
+	}
+
+	db := postgresql.SetupDB()
+	log.Println("Db is working in UpdateBook!")
+	defer db.Close()
+
+	item_id := mux.Vars(req)["id"]
+
+	if item_id == "" {
+		http.Error(w, "There is no such id", http.StatusNotFound)
+		return
+	}
+
+	res_id, err := strconv.Atoi(item_id)
+
+	var max_id int
+	max_id_row := db.QueryRow("select max(book_id) from book")
+	check_id_error := max_id_row.Scan(&max_id)
+
+	if err != nil || res_id < 1 || check_id_error != nil || max_id < res_id {
+		http.Error(w, "There is no such id!", 404)
+		return
+	}
+
+	book := models.Book{}
+	json.NewDecoder(req.Body).Decode(&book)
+
+	_, res_err := db.Exec(
+		"update book set name = $1, price = $2, genre = $3, user_id = $4, author_id = $5, release_date = $6 where book_id = $7",
+		book.Name, book.Price, book.Genre, book.User_id, book.Author_id, book.Release_date, res_id)
+	if res_err != nil {
+		log.Fatalln(res_err.Error())
+	}
+
+	row := db.QueryRow("select * from book where book_id = $1", res_id)
+
+	resBook := models.Book{}
+	err = row.Scan(&resBook.Book_id, &resBook.Name, &resBook.Price,
+		&resBook.Genre, &resBook.User_id, &resBook.Author_id, &resBook.Release_date)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "There is no any item with this id!", 404)
+		return
+	}
+
+	json.NewEncoder(w).Encode(&resBook)
 }
 
 func DeleteBook(w http.ResponseWriter, req *http.Request) {
