@@ -25,7 +25,36 @@ func CheckerFunc(w http.ResponseWriter, req *http.Request) {
 func CreateBook(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	w.Write([]byte("CreateBook function..."))
+	if req.Method != http.MethodPost {
+		w.Header().Add("Allow", "POST")
+		http.Error(w, "This method is not allowed!", http.StatusMethodNotAllowed)
+		return
+	}
+
+	db := postgresql.SetupDB()
+	log.Println("Db is working in CreateBook!")
+	defer db.Close()
+
+	book := models.Book{}
+	json.NewDecoder(req.Body).Decode(&book)
+
+	_, err := db.Exec("insert into book(name, price, genre, author_id) values($1, $2, $3, $4)",
+		book.Name, book.Price, book.Genre, book.Author_id)
+
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	var max_id int
+	max_id_row := db.QueryRow("select max(book_id) from book")
+	check_id_error := max_id_row.Scan(&max_id)
+
+	if check_id_error != nil {
+		log.Fatalln(err.Error())
+	}
+
+	book.Book_id = max_id
+	json.NewEncoder(w).Encode(&book)
 }
 
 func GetAllBooks(w http.ResponseWriter, req *http.Request) {
@@ -71,6 +100,7 @@ func GetAllBooks(w http.ResponseWriter, req *http.Request) {
 
 func GetBook(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
 	if req.Method != http.MethodGet {
 		w.Header().Add("Allow", "GET")
 		http.Error(w, "This method is not allowed!", http.StatusMethodNotAllowed)
