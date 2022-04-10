@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/ilyaKrivitskiy/rest-api/pkg/models"
 	"github.com/ilyaKrivitskiy/rest-api/pkg/postgresql"
 	_ "github.com/lib/pq"
@@ -69,8 +71,45 @@ func GetAllBooks(w http.ResponseWriter, req *http.Request) {
 
 func GetBook(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	if req.Method != http.MethodGet {
+		w.Header().Add("Allow", "GET")
+		http.Error(w, "This method is not allowed!", http.StatusMethodNotAllowed)
+		return
+	}
 
-	w.Write([]byte("GetBook function..."))
+	book_id := mux.Vars(req)["id"]
+
+	if book_id == "" {
+		http.Error(w, "Wrong id!", 404)
+		return
+	}
+	res_id, err := strconv.Atoi(book_id)
+
+	db := postgresql.SetupDB()
+	log.Println("Db is working in getItem by id!")
+	defer db.Close()
+
+	var max_id int
+	max_id_row := db.QueryRow("select max(book_id) from book")
+	check_id_error := max_id_row.Scan(&max_id)
+
+	if err != nil || res_id < 1 || check_id_error != nil || max_id < res_id {
+		http.Error(w, "There is no such id!", 404)
+		return
+	}
+
+	book := models.Book{}
+
+	row := db.QueryRow("select * from book where book_id = $1", res_id)
+
+	err = row.Scan(&book.Book_id, &book.Name, &book.Price, &book.Genre, &book.User_id, &book.Author_id, &book.Release_date)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "There is no any item with this id!", 404)
+		return
+	}
+
+	json.NewEncoder(w).Encode(&book)
 }
 
 func UpdateBook(w http.ResponseWriter, req *http.Request) {
